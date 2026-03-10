@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     "rest_framework_simplejwt.token_blacklist", 
+    "quizzes_app", 
 
 ]
 
@@ -67,7 +68,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+# core/settings.py
+CORS_ALLOW_CREDENTIALS = True
 ROOT_URLCONF = 'core.urls'
 CORS_ALLOW_ALL_ORIGINS = True
 TEMPLATES = [
