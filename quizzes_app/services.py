@@ -62,26 +62,19 @@ def generate_quiz_from_transcript(transcript: str) -> dict:
 
     for model in models:
         try:
-            print(f"⏳ Versuche Modell: {model}")
+            print(f"Versuche Modell: {model}")
             response = client.models.generate_content(
                 model=model,
                 contents=prompt,
             )
-            print(f"✅ Modell {model} erfolgreich!")
+            print(f"Modell {model} erfolgreich!")
             return _parse_gemini_response(response.text)
-
-        # except Exception as e:
-        #     error_str = str(e)
-        #     if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "404" in error_str:
-        #         print(f"⚠️ {model} nicht verfügbar, nächstes Modell...")
-        #         continue
-        #     raise e
 
         except Exception as e:
             error_str = str(e)
             if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "404" in error_str:
                 # ← :100 hinzufügen
-                print(f"⚠️ {model} nicht verfügbar: {error_str[:100]}")
+                print(f" {model} nicht verfügbar: {error_str[:100]}")
                 continue
             raise e
 
