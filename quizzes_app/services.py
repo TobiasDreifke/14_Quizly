@@ -2,107 +2,9 @@ import os
 from google import genai
 from dotenv import load_dotenv
 import json
+from .utils import _is_billing_error, _is_quota_error, _build_quiz_prompt, _parse_gemini_response
 
 load_dotenv()
-
-
-def _build_quiz_prompt(transcript: str) -> str:
-    """
-    Builds the prompt sent to Gemini for quiz generation.
-
-    Instructs Gemini to respond with a strictly structured JSON object only —
-    no markdown, no preamble. The transcript is truncated to 8000 characters
-    to stay within token limits.
-
-    The prompt enforces:
-        - Exactly 10 questions.
-        - Exactly 4 answer options per question.
-        - The correct answer must exactly match one of the options.
-        - Questions are generated in the language of the transcript.
-
-    Args:
-        transcript: The full or truncated transcript text from the YouTube video.
-
-    Returns:
-        A formatted prompt string ready to be sent to the Gemini API.
-    """
-    return f"""
-    You are a quiz generator. Create a quiz with exactly 10 questions based on the following transcript.
-
-    IMPORTANT: Respond ONLY with a JSON object. No text before or after, no markdown backticks.
-
-    Format:
-    {{
-      "title": "Short quiz title",
-      "description": "Brief description of what the quiz is about",
-      "questions": [
-        {{
-          "question_title": "The question?",
-          "question_options": ["Option A", "Option B", "Option C", "Option D"],
-          "answer": "Option A"
-        }}
-      ]
-    }}
-
-    Rules:
-    - Exactly 10 questions
-    - Exactly 4 answer options per question
-    - "answer" must exactly match one of the "question_options"
-    - Generate questions in the same language as the transcript
-
-    Transcript:
-    {transcript[:8000]}
-    """
-
-
-def _parse_gemini_response(raw: str) -> dict:
-    """
-    Safely parses the raw Gemini response text into a Python dictionary.
-
-    Strips potential markdown code fences (```json ... ```) that Gemini may
-    include despite being instructed not to, then parses the cleaned string as JSON.
-
-    Args:
-        raw: The raw response string from the Gemini API.
-
-    Returns:
-        A dictionary containing the quiz title, description, and list of questions.
-
-    Raises:
-        json.JSONDecodeError: If the response cannot be parsed as valid JSON.
-    """
-    cleaned = raw.strip().removeprefix("```json").removeprefix(
-        "```").removesuffix("```").strip()
-    return json.loads(cleaned)
-
-
-def _is_quota_error(error_str: str) -> bool:
-    """
-    Returns True if the error indicates a free tier quota has been exhausted
-    or the model is not found.
-
-    Handles:
-        429 RESOURCE_EXHAUSTED – Daily or per-minute free tier limit reached.
-        404 NOT_FOUND          – Model name not available for this API version.
-
-    Args:
-        error_str: String representation of the caught exception.
-
-    Returns:
-        True if the error is quota- or availability-related, False otherwise.
-    """
-    return "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "404" in error_str
-
-
-def _is_billing_error(error_str: str) -> bool:
-    """
-    Returns True only if the error indicates a paid quota would be charged.
-    Gemini returns 402 PAYMENT_REQUIRED when free tier is exhausted and
-    the request would incur costs.
-    Note: 429 RESOURCE_EXHAUSTED messages may contain the word 'billing'
-    in their description but are NOT billing errors — they are quota errors.
-    """
-    return "402" in error_str or "PAYMENT_REQUIRED" in error_str
 
 
 def generate_quiz_from_transcript(transcript: str) -> dict:
@@ -161,7 +63,8 @@ def generate_quiz_from_transcript(transcript: str) -> dict:
             error_str = str(e)
 
             if _is_billing_error(error_str):
-                print(f"Model {model} requires payment — skipping to avoid charges.")
+                print(
+                    f"Model {model} requires payment — skipping to avoid charges.")
                 continue
 
             if _is_quota_error(error_str):
