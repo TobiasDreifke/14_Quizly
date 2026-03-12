@@ -96,21 +96,13 @@ def _is_quota_error(error_str: str) -> bool:
 
 def _is_billing_error(error_str: str) -> bool:
     """
-    Returns True if the error indicates a paid quota has been exceeded.
-
-    Gemini returns a 402 PAYMENT_REQUIRED error when a model's free tier
-    is exhausted and the request would incur costs. This check allows the
-    fallback loop to skip gemini-2.5-pro instead of charging the account.
-
-    Args:
-        error_str: String representation of the caught exception.
-
-    Returns:
-        True if the error is billing-related, False otherwise.
+    Returns True only if the error indicates a paid quota would be charged.
+    Gemini returns 402 PAYMENT_REQUIRED when free tier is exhausted and
+    the request would incur costs.
+    Note: 429 RESOURCE_EXHAUSTED messages may contain the word 'billing'
+    in their description but are NOT billing errors — they are quota errors.
     """
-    billing_keywords = ["BILLING", "billing",
-                        "PAYMENT_REQUIRED", "payment", "402"]
-    return any(keyword in error_str for keyword in billing_keywords)
+    return "402" in error_str or "PAYMENT_REQUIRED" in error_str
 
 
 def generate_quiz_from_transcript(transcript: str) -> dict:
@@ -169,8 +161,7 @@ def generate_quiz_from_transcript(transcript: str) -> dict:
             error_str = str(e)
 
             if _is_billing_error(error_str):
-                print(
-                    f"Model {model} requires payment — skipping to avoid charges.")
+                print(f"Model {model} requires payment — skipping to avoid charges.")
                 continue
 
             if _is_quota_error(error_str):
