@@ -71,25 +71,67 @@ def _parse_gemini_response(raw: str) -> dict:
     Raises:
         json.JSONDecodeError: If the response cannot be parsed as valid JSON.
     """
-    cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    cleaned = raw.strip().removeprefix("```json").removeprefix(
+        "```").removesuffix("```").strip()
     return json.loads(cleaned)
+
+
+def _is_quota_error(error_str: str) -> bool:
+    """
+    Returns True if the error indicates a free tier quota has been exhausted
+    or the model is not found.
+
+    Handles:
+        429 RESOURCE_EXHAUSTED – Daily or per-minute free tier limit reached.
+        404 NOT_FOUND          – Model name not available for this API version.
+
+    Args:
+        error_str: String representation of the caught exception.
+
+    Returns:
+        True if the error is quota- or availability-related, False otherwise.
+    """
+    return "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "404" in error_str
+
+
+def _is_billing_error(error_str: str) -> bool:
+    """
+    Returns True if the error indicates a paid quota has been exceeded.
+
+    Gemini returns a 402 PAYMENT_REQUIRED error when a model's free tier
+    is exhausted and the request would incur costs. This check allows the
+    fallback loop to skip gemini-2.5-pro instead of charging the account.
+
+    Args:
+        error_str: String representation of the caught exception.
+
+    Returns:
+        True if the error is billing-related, False otherwise.
+    """
+    billing_keywords = ["BILLING", "billing",
+                        "PAYMENT_REQUIRED", "payment", "402"]
+    return any(keyword in error_str for keyword in billing_keywords)
 
 
 def generate_quiz_from_transcript(transcript: str) -> dict:
     """
     Sends a transcript to the Gemini API and returns a generated quiz as a dictionary.
 
-    Tries multiple Gemini models in order of preference. If a model returns a 429
-    (quota exhausted) or 404 (model not found), the next model in the list is tried.
-    Any other exception is re-raised immediately.
+    Tries multiple Gemini models in order of preference. Free tier models are
+    tried first. gemini-2.5-pro is included as a last resort but is skipped
+    if a billing error is returned — ensuring no unexpected costs are incurred.
+
+    If a model returns a quota (429), availability (404), or billing (402) error,
+    the next model in the list is tried. Any other exception is re-raised immediately.
 
     Model fallback order:
-        1. gemini-2.0-flash       – Preferred, fast and free tier.
-        2. gemini-2.0-flash-lite  – Lighter variant, separate quota.
-        3. gemini-2.5-flash       – Next generation, higher quality.
-        4. gemini-2.5-flash-lite  – Lighter 2.5 variant.
-        5. gemini-2.5-pro         – Highest quality, used as last resort.
-        6. gemini-flash-latest    – Alias for the latest flash model.
+        1. gemini-2.5-flash      – Best free quality, 500 requests/day.
+        2. gemini-2.5-flash-lite – Lighter 2.5 variant, 1500 requests/day.
+        3. gemini-2.0-flash      – Reliable and fast, 1500 requests/day.
+        4. gemini-2.0-flash-lite – Most conservative free option, 1500 requests/day.
+        5. gemini-flash-latest   – Alias for latest flash, used as safety net.
+        6. gemini-2.5-pro        – Highest quality, free tier only (50 requests/day).
+                                   Skipped automatically if billing would be triggered.
 
     Args:
         transcript: The transcript text to generate a quiz from.
@@ -104,12 +146,13 @@ def generate_quiz_from_transcript(transcript: str) -> dict:
     prompt = _build_quiz_prompt(transcript)
 
     models = [
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
+        # Best quality, 50 free requests/day — skipped if billing triggers
         "gemini-2.5-pro",
-        "gemini-flash-latest",
+        "gemini-2.5-flash",       # Best free quality, 500 requests/day
+        "gemini-2.5-flash-lite",  # Lighter 2.5 variant, 1500 requests/day
+        "gemini-2.0-flash",       # Reliable and fast, 1500 requests/day
+        "gemini-2.0-flash-lite",  # Most conservative free option, 1500 requests/day
+        "gemini-flash-latest",    # Alias for latest flash, last resort
     ]
 
     for model in models:
@@ -124,9 +167,17 @@ def generate_quiz_from_transcript(transcript: str) -> dict:
 
         except Exception as e:
             error_str = str(e)
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "404" in error_str:
+
+            if _is_billing_error(error_str):
+                print(
+                    f"Model {model} requires payment — skipping to avoid charges.")
+                continue
+
+            if _is_quota_error(error_str):
                 print(f"Model {model} unavailable: {error_str[:100]}")
                 continue
+
             raise e
 
-    raise Exception("All Gemini models have exhausted their quota or are unavailable.")
+    raise Exception(
+        "All Gemini models have exhausted their quota or are unavailable.")
