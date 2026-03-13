@@ -1,4 +1,4 @@
-# Quizly – AI-Powered Quiz Generator from YouTube Videos
+# Quizly - AI-Powered Quiz Generator from YouTube Videos
 
 Quizly is a Django REST API backend that turns any YouTube video into an interactive quiz. It extracts audio, transcribes it with Whisper AI, and generates 10 multiple-choice questions using Google Gemini Flash: all automatically.
 

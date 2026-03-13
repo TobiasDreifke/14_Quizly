@@ -11,18 +11,18 @@ class Quiz(models.Model):
     but can be edited by the user via the PATCH endpoint.
 
     Relationships:
-        user      – ForeignKey to Django's built-in User model.
+        user      - ForeignKey to Django's built-in User model.
                     Deleting a user cascade-deletes all their quizzes.
-        questions – Reverse relation to Question (related_name='questions').
+        questions - Reverse relation to Question (related_name='questions').
                     Accessible via quiz.questions.all().
 
     Fields:
-        title       – Short title for the quiz (AI-generated, editable).
-        description – Brief description of the quiz content (AI-generated, editable).
-        video_url   – The original YouTube URL used to generate the quiz.
+        title       - Short title for the quiz (AI-generated, editable).
+        description - Brief description of the quiz content (AI-generated, editable).
+        video_url   - The original YouTube URL used to generate the quiz.
                       Stored as a URL string and used to embed the video in the frontend.
-        created_at  – Timestamp set automatically on creation.
-        updated_at  – Timestamp updated automatically on every save.
+        created_at  - Timestamp set automatically on creation.
+        updated_at  - Timestamp updated automatically on every save.
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="quizzes")
@@ -44,16 +44,16 @@ class Question(models.Model):
     cascade-deletes all its associated questions.
 
     Fields:
-        quiz             – ForeignKey to the parent Quiz.
+        quiz             - ForeignKey to the parent Quiz.
                            Deleting a quiz cascade-deletes all its questions.
-        question_title   – The question text (e.g. 'What is the capital of France?').
-        question_options – A JSON array of exactly 4 answer choices.
+        question_title   - The question text (e.g. 'What is the capital of France?').
+        question_options - A JSON array of exactly 4 answer choices.
                            Example: ["Paris", "London", "Berlin", "Madrid"]
                            Stored as JSONField to avoid a separate Option model.
-        answer           – The correct answer. Must exactly match one of the values
+        answer           - The correct answer. Must exactly match one of the values
                            in question_options to ensure frontend comparison works.
-        created_at       – Timestamp set automatically on creation.
-        updated_at       – Timestamp updated automatically on every save.
+        created_at       - Timestamp set automatically on creation.
+        updated_at       - Timestamp updated automatically on every save.
     """
 
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")

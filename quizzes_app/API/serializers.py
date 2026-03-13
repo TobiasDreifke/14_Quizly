@@ -10,12 +10,12 @@ class QuestionSerializer(serializers.ModelSerializer):
     and the correct answer. Used as a nested serializer inside QuizSerializer.
 
     Fields:
-        id              – Primary key.
-        question_title  – The question text.
-        question_options – List of 4 answer choices (JSON array).
-        answer          – The correct answer (must match one of question_options).
-        created_at      – Timestamp of creation (auto-set).
-        updated_at      – Timestamp of last update (auto-set).
+        id              - Primary key.
+        question_title  - The question text.
+        question_options - List of 4 answer choices (JSON array).
+        answer          - The correct answer (must match one of question_options).
+        created_at      - Timestamp of creation (auto-set).
+        updated_at      - Timestamp of last update (auto-set).
     """
 
     class Meta:
@@ -40,13 +40,13 @@ class QuizSerializer(serializers.ModelSerializer):
     created internally by the quiz generation pipeline.
 
     Fields:
-        id          – Primary key.
-        title       – Quiz title (AI-generated, editable via PATCH).
-        description – Short description (AI-generated, editable via PATCH).
-        created_at  – Timestamp of creation (auto-set).
-        updated_at  – Timestamp of last update (auto-set).
-        video_url   – The original YouTube URL used to generate the quiz.
-        questions   – Nested list of all associated questions (read-only).
+        id          - Primary key.
+        title       - Quiz title (AI-generated, editable via PATCH).
+        description - Short description (AI-generated, editable via PATCH).
+        created_at  - Timestamp of creation (auto-set).
+        updated_at  - Timestamp of last update (auto-set).
+        video_url   - The original YouTube URL used to generate the quiz.
+        questions   - Nested list of all associated questions (read-only).
     """
 
     questions = QuestionSerializer(many=True, read_only=True)

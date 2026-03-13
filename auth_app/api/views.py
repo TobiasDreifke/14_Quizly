@@ -13,7 +13,7 @@ class RegistrationView(APIView):
     """
     Handles new user registration.
 
-    POST /api/register/  – Creates a new user account.
+    POST /api/register/  - Creates a new user account.
 
     Permissions: Open to all (no authentication required).
 
@@ -54,7 +54,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     Extends the default JWT login view to set tokens as HTTP-only cookies
     instead of returning them in the response body.
 
-    POST /api/login/  – Authenticates a user and sets JWT cookies.
+    POST /api/login/  - Authenticates a user and sets JWT cookies.
 
     Permissions: Open to all (no authentication required).
 
@@ -62,16 +62,16 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         { "username": "john", "password": "secret123" }
 
     On success, sets two HTTP-only cookies:
-        access_token  – Short-lived token used for authenticating requests.
-        refresh_token – Long-lived token used to obtain new access tokens.
+        access_token  - Short-lived token used for authenticating requests.
+        refresh_token - Long-lived token used to obtain new access tokens.
 
     The response body only contains { "message": "Login successful" }.
     Tokens are never exposed in the response body to prevent XSS token theft.
 
     Cookie settings:
-        httponly=True  – Inaccessible to JavaScript.
-        secure=True    – Sent only over HTTPS.
-        samesite="Lax" – Protects against CSRF while allowing top-level navigation.
+        httponly=True  - Inaccessible to JavaScript.
+        secure=True    - Sent only over HTTPS.
+        samesite="Lax" - Protects against CSRF while allowing top-level navigation.
     """
 
     def post(self, request, *args, **kwargs):
@@ -106,7 +106,7 @@ class CookieTokenRefreshView(TokenRefreshView):
     Extends the default JWT token refresh view to read the refresh token
     from an HTTP-only cookie instead of the request body.
 
-    POST /api/token/refresh/  – Issues a new access token using the refresh token cookie.
+    POST /api/token/refresh/  - Issues a new access token using the refresh token cookie.
 
     Permissions: Open to all (the refresh token itself is the credential).
 
@@ -155,7 +155,7 @@ class LogoutView(APIView):
     """
     Handles user logout by blacklisting the refresh token and clearing both cookies.
 
-    POST /api/logout/  – Logs out the authenticated user.
+    POST /api/logout/  - Logs out the authenticated user.
 
     Permissions: Authentication required.
 

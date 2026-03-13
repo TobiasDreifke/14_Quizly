@@ -11,10 +11,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
     returned in any response.
 
     Fields:
-        username          – Unique username (validated by Django's User model).
-        email             – Required, must be unique across all users.
-        password          – Write-only. Stored as a hashed value via set_password().
-        confirmed_password – Write-only. Must match password. Not saved to the database.
+        username          - Unique username (validated by Django's User model).
+        email             - Required, must be unique across all users.
+        password          - Write-only. Stored as a hashed value via set_password().
+        confirmed_password - Write-only. Must match password. Not saved to the database.
     """
 
     confirmed_password = serializers.CharField(write_only=True)
