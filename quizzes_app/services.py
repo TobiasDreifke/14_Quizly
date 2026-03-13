@@ -1,7 +1,6 @@
 import os
 from google import genai
 from dotenv import load_dotenv
-import json
 from .utils import _is_billing_error, _is_quota_error, _build_quiz_prompt, _parse_gemini_response
 
 load_dotenv()
@@ -19,12 +18,12 @@ def generate_quiz_from_transcript(transcript: str) -> dict:
     the next model in the list is tried. Any other exception is re-raised immediately.
 
     Model fallback order:
-        1. gemini-2.5-flash      – Best free quality, 500 requests/day.
-        2. gemini-2.5-flash-lite – Lighter 2.5 variant, 1500 requests/day.
-        3. gemini-2.0-flash      – Reliable and fast, 1500 requests/day.
-        4. gemini-2.0-flash-lite – Most conservative free option, 1500 requests/day.
-        5. gemini-flash-latest   – Alias for latest flash, used as safety net.
-        6. gemini-2.5-pro        – Highest quality, free tier only (50 requests/day).
+        1. gemini-2.5-flash      - Best free quality, 500 requests/day.
+        2. gemini-2.5-flash-lite - Lighter 2.5 variant, 1500 requests/day.
+        3. gemini-2.0-flash      - Reliable and fast, 1500 requests/day.
+        4. gemini-2.0-flash-lite - Most conservative free option, 1500 requests/day.
+        5. gemini-flash-latest   - Alias for latest flash, used as safety net.
+        6. gemini-2.5-pro        - Highest quality, free tier only (50 requests/day).
                                    Skipped automatically if billing would be triggered.
 
     Args:
