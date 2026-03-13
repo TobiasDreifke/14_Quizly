@@ -70,6 +70,7 @@ Create a `.env` file in the project root:
 SECRET_KEY=your_django_secret_key
 DEBUG=True
 GEMINI_API_KEY=your_gemini_api_key
+ALLOWED_HOSTS=127.0.0.1,localhost
 ```
 
 Get your free Gemini API key at [Google AI Studio](https://aistudio.google.com/).
